@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>PlayReport | Betting Slip Analyzer</title>
+<style>
+body { font-family: Arial; background:#f8f9fa; margin:0; padding:0; color:#222;}
+header{background:white;padding:20px;text-align:center;font-size:22px;font-weight:bold;box-shadow:0 2px 5px rgba(0,0,0,0.08);}
+.container{padding:20px;max-width:900px;margin:auto;}
+.box{background:white;padding:20px;margin-bottom:20px;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,0.05);}
+.progress-bar{height:12px;background:#e0e0e0;border-radius:50px;overflow:hidden;}
+.progress-fill{height:100%;width:0;background:#4285f4;transition:width 1s ease;}
+#previewImg{width:100%;border-radius:10px;margin-top:10px;display:none;}
+footer{text-align:center;padding:20px;color:#777;}
+</style>
+</head>
+<body>
+<header>PlayReport – Betting Slip Analyzer</header>
+<div class="container">
+  <div class="box">
+    <h3>Upload Betting Slip</h3>
+    <input type="file" id="fileInput" accept="image/*"><br><br>
+    <input type="file" id="cameraInput" accept="image/*" capture="camera">
+    <img id="previewImg">
+    <button onclick="processImage()">Analyze Slip</button>
+  </div>
+
+  <div class="box">
+    <h3>Extracted Slip Text</h3>
+    <pre id="slipText"></pre>
+  </div>
+
+  <div class="box">
+    <h3>Risk Analysis Dashboard</h3>
+    <div>Risk Score</div>
+    <div class="progress-bar"><div id="riskBar" class="progress-fill"></div></div>
+    <p id="riskLabel"></p>
+  </div>
+
+  <div class="box">
+    <h3>Safer 5-Leg Accumulator</h3>
+    <ul id="safeLegs"></ul>
+    <strong>Total Odds:</strong> <span id="oddsRange"></span>
+  </div>
+</div>
+<footer>PlayReport | Your Daily Edge</footer>
+
+<script>
+let uploadedBase64="";
+document.getElementById("fileInput").addEventListener("change", getImageBase64);
+document.getElementById("cameraInput").addEventListener("change", getImageBase64);
+
+function getImageBase64(event){
+  const file = event.target.files[0];
+  const reader=new FileReader();
+  reader.onload=function(e){
+    uploadedBase64=e.target.result;
+    document.getElementById("previewImg").src=uploadedBase64;
+    document.getElementById("previewImg").style.display="block";
+  };
+  reader.readAsDataURL(file);
+}
+
+async function processImage(){
+  if(!uploadedBase64){alert("Please upload an image.");return;}
+  const response=await fetch("YOUR_WORKER_URL",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({imageBase64:uploadedBase64})
+  });
+  const data=await response.json();
+  document.getElementById("slipText").textContent=data.rawText;
+  document.getElementById("riskBar").style.width=data.risk.score+"%";
+  document.getElementById("riskLabel").textContent=`Risk Level: ${data.risk.level} (${data.risk.score}%)`;
+  document.getElementById("safeLegs").innerHTML=data.safer.legs.map(x=>`<li>${x}</li>`).join("");
+  document.getElementById("oddsRange").textContent=data.safer.totalOdds;
+}
+</script>
+</body>
+</html>
